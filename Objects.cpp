@@ -3,7 +3,8 @@
 Player::Player()
 {
 	HP = maxHP = 3;
-	IsJumping = IsLeft = IsRunning = IsFalling = 0;
+	IsJumping = IsLeft = IsRunning = IsFalling = IsDashing = false;
+	CanDash = true;
 	Hitbox = { 0, 0, 100, 300 };
 	V = { 0, 0 };
 }
@@ -11,7 +12,8 @@ Player::Player()
 Player::Player(Vector2 pos)
 {
 	HP = maxHP = 3;
-	IsJumping = IsLeft = IsRunning = IsFalling = 0;
+	IsJumping = IsLeft = IsRunning = IsFalling = IsDashing = false;
+	CanDash = true;
 	Hitbox = { pos.x, pos.y, 100, 300 };
 	V = { 0, 0 };
 }
@@ -35,6 +37,14 @@ bool Player::getIsRunning()
 bool Player::getIsFalling()
 {
 	return IsFalling;
+}
+bool Player::getIsDashing()
+{
+	return IsDashing;
+}
+bool Player::getCanDash()
+{
+	return CanDash;
 }
 bool Player::getAlive()
 {
@@ -64,6 +74,10 @@ void Player::setIsRunning(bool IsRunning)
 void Player::setIsFalling(bool IsFalling)
 {
 	this->IsFalling = IsFalling;
+}
+void Player::setCanDash(bool CanDash)
+{
+	this->CanDash = CanDash;
 }
 void Player::setHitbox(Rectangle Hitbox)
 {
@@ -117,6 +131,7 @@ void Player::UpdateJumpV()
 	{
 		float dy = GravityForce;
 		if (IsKeyDown(KEY_SPACE))	dy *= HOLDFORCE;
+		if (IsDashing)	dy *= DASHYFORCE;
 		if (abs(V.y) < 50)	dy *= 0.2;
 		else if (V.y < 0) dy *= 1.2;
 		V.y -= dy;
@@ -129,13 +144,35 @@ void Player::Fall()
 	IsFalling = 1;
 }
 
+void Player::Dash()
+{
+	IsDashing = 1;
+	CanDash = 0;
+	if (!IsLeft)	V.x = DASHV;
+	else V.x = -DASHV;
+	V.y *= DASHYFORCE;
+	DashTimer = GetTime();
+}
+
+void Player::AddCanDash(bool dc)
+{
+	CanDash += dc;
+}
+
 void Player::UpdateHorisontalV()
 {
-	if (IsKeyDown(KEY_D) && !IsKeyDown(KEY_A))	V.x = WALKV;
-	else if (IsKeyDown(KEY_A) && !IsKeyDown(KEY_D))	V.x = -WALKV;
-	else  V.x = 0;
-	IsLeft = IsKeyDown(KEY_A) && IsKeyDown(KEY_A) == !IsKeyDown(KEY_D);
-	if (IsKeyDown(KEY_LEFT_CONTROL))	V.x *= RUNFORCE;
+	if (!IsDashing)
+	{
+		if (IsKeyDown(KEY_D) && !IsKeyDown(KEY_A))	V.x = WALKV;
+		else if (IsKeyDown(KEY_A) && !IsKeyDown(KEY_D))	V.x = -WALKV;
+		else  V.x = 0;
+		if (IsKeyDown(KEY_A) != IsKeyDown(KEY_D))	IsLeft = IsKeyDown(KEY_A);
+		if (IsKeyDown(KEY_LEFT_CONTROL))	V.x *= RUNFORCE;
+	}
+	else if (IsDashing && (GetTime() - DashTimer > DASHLENGTH))
+	{
+		IsDashing = 0;
+	}
 }
 
 void Player::UpdatePos()
@@ -164,6 +201,9 @@ void UpdatePlayerMovement(Player& player, Chapter chapter)
 		}
 	}
 	if (fall)	player.Fall();
+	player.AddCanDash(!fall);
+	if (IsKeyPressed(KEY_LEFT_SHIFT) && !player.getIsDashing() && player.getCanDash())	player.Dash();
+
 	player.UpdateHorisontalV();
 	player.UpdatePos();
 }

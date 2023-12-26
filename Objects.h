@@ -3,12 +3,15 @@
 #include "raylib.h"
 #include "Enemies.h"
 
-#define JUMPV	2000
-#define MINABSV	-5000
+#define JUMPV			2000
+#define MINABSV			-5000
 #define GRAVITYFORCE	80
-#define HOLDFORCE	0.5
-#define WALKV	10
-#define RUNFORCE	1.5
+#define HOLDFORCE		0.5
+#define WALKV			10
+#define RUNFORCE		1.5
+#define DASHV			50
+#define DASHYFORCE		0
+#define DASHLENGTH		0.08		//in seconds
 
 void DrawRectangleRecOrdinary(Rectangle rec, Color color);
 
@@ -26,6 +29,8 @@ public:
 	bool getIsLeft();
 	bool getIsRunning();
 	bool getIsFalling();
+	bool getIsDashing();
+	bool getCanDash();
 	bool getAlive();
 	Rectangle getHitbox();
 	Vector2 getV();
@@ -35,6 +40,7 @@ public:
 	void setIsLeft(bool IsLeft);
 	void setIsRunning(bool IsRunning);
 	void setIsFalling(bool IsFalling);
+	void setCanDash(bool CanDash);
 	void setHitbox(Rectangle Hitbox);
 	void setV(Vector2 V);
 	void setPos(Vector2 pos);
@@ -50,15 +56,18 @@ public:
 	void UpdateJumpV();
 	void Fall();
 	void Dash();
+	void AddCanDash(bool dc);
 	void UpdateHorisontalV();
 	void UpdatePos();
 
 private:
 	float GravityForce;
 
+	double DashTimer;
+
 	int HP, maxHP;
 
-	bool IsJumping, IsLeft, IsRunning, IsFalling, Alive;
+	bool IsJumping, IsLeft, IsRunning, IsFalling, Alive, IsDashing, CanDash;
 	Rectangle Hitbox;
 	std::vector<Texture2D> animations;
 	Vector2 V;

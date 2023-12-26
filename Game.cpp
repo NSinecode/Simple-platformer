@@ -27,7 +27,7 @@ int main()
 
     //Chapter
     Chapter first;
-    first.setRecObstacles({ { -1000, -500, 2000, 100 } });
+    first.setRecObstacles({ { -1000, -500, 2000, 100 }, { -2000, -300, 300, 100 } });
 
     // Set our game to run at 60 frames-per-second
     SetTargetFPS(144);                  
@@ -88,7 +88,8 @@ int main()
 
         DrawCircle(0, 0, 50, GREEN);
 
-        DrawRectangleRecOrdinary(first.getRecObstacles()[0], RED);
+        for (int i = 0; i < first.getRecObstacles().size(); i++)    DrawRectangleRecOrdinary(first.getRecObstacles()[i], RED);
+
         DrawRectangleRecOrdinary(main.getHitbox(), BLACK);
 
         EndMode2D();
