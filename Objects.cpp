@@ -4,7 +4,7 @@ Player::Player()
 {
 	HP = maxHP = 3;
 	IsJumping = IsLeft = IsRunning = IsFalling = IsDashing = false;
-	CanDash = true;
+	CanDash = CanGoLeft = CanGoRight = true;
 	Hitbox = { 0, 0, 100, 300 };
 	V = { 0, 0 };
 }
@@ -46,6 +46,14 @@ bool Player::getCanDash()
 {
 	return CanDash;
 }
+bool Player::getCanGoLeft()
+{
+	return CanGoLeft;
+}
+bool Player::getCanGoRight()
+{
+	return CanGoRight;
+}
 bool Player::getAlive()
 {
 	return Alive;
@@ -79,6 +87,14 @@ void Player::setCanDash(bool CanDash)
 {
 	this->CanDash = CanDash;
 }
+void Player::setCanGoLeft(bool CanGoLeft)
+{
+	this->CanGoLeft = CanGoLeft;
+}
+void Player::setCanGoRight(bool CanGoRight)
+{
+	this->CanGoRight = CanGoRight;
+}
 void Player::setHitbox(Rectangle Hitbox)
 {
 	this->Hitbox = Hitbox;
@@ -109,6 +125,11 @@ void Player::Damage(int dHP)
 void Player::PushUp(float dy)
 {
 	Hitbox.y += dy;
+}
+
+void Player::PushRight(float dx)
+{
+	Hitbox.x += dx;
 }
 
 void Player::Jump()
@@ -163,8 +184,8 @@ void Player::UpdateHorisontalV()
 {
 	if (!IsDashing)
 	{
-		if (IsKeyDown(KEY_D) && !IsKeyDown(KEY_A))	V.x = WALKV;
-		else if (IsKeyDown(KEY_A) && !IsKeyDown(KEY_D))	V.x = -WALKV;
+		if (IsKeyDown(KEY_D) && !IsKeyDown(KEY_A) && CanGoRight)	V.x = WALKV;
+		else if (IsKeyDown(KEY_A) && !IsKeyDown(KEY_D) && CanGoLeft)	V.x = -WALKV;
 		else  V.x = 0;
 		if (IsKeyDown(KEY_A) != IsKeyDown(KEY_D))	IsLeft = IsKeyDown(KEY_A);
 		if (IsKeyDown(KEY_LEFT_CONTROL))	V.x *= RUNFORCE;
@@ -177,7 +198,7 @@ void Player::UpdateHorisontalV()
 
 void Player::UpdatePos()
 {
-	Hitbox.x += V.x;
+	Hitbox.x += V.x * GetFrameTime();
 	Hitbox.y += V.y * GetFrameTime();
 }
 
@@ -190,20 +211,51 @@ void UpdatePlayerMovement(Player& player, Chapter chapter)
 {
 	if ((IsKeyPressed(KEY_SPACE) or IsKeyDown(KEY_SPACE)) && !player.getIsJumping())	player.Jump();
 	else if (player.getIsJumping() or player.getIsFalling()) player.UpdateJumpV();
-	bool fall =	1;
+	//cgl - can go left, cgr - can go right
+	bool fall =	1, cgl = 1, cgr = 1;
+	//Check rectangle collision
 	for (int i = 0; i < chapter.getRecObstacles().size(); i++)
 	{
 		if (CheckCollisionRecs(player.getHitbox(), chapter.getRecObstacles()[i]))
 		{
-			fall = 0;
-			player.EndJump();
-			player.PushUp(GetCollisionRec(player.getHitbox(), chapter.getRecObstacles()[i]).height - 1);
+			Rectangle col = GetCollisionRec(player.getHitbox(), chapter.getRecObstacles()[i]);
+			if (col.width > col.height)
+			{
+				if (abs(col.y - player.getHitbox().y) < abs(col.y - player.getHitbox().y - player.getHitbox().height))
+				{
+					fall = 0;
+					player.EndJump();
+					player.PushUp(col.height);
+				}
+				else
+				{
+					//player.EndJump();
+					player.setV({ player.getV().x, -player.getV().y * (float)BUMPFORCE });
+					player.PushUp(-col.height);
+				}
+			}
+			else if (col.width < col.height)
+			{
+				if (abs(col.x - player.getHitbox().x) < abs(col.x - player.getHitbox().x - player.getHitbox().width))
+				{
+					player.setV({ 0, player.getV().y });
+					player.PushRight(col.width - 1);
+					cgl = false;
+				}
+				else
+				{
+					player.setV({ 0, player.getV().y });
+					player.PushRight(-col.width + 1);
+					cgr = false;
+				}
+			}
 		}
 	}
+	player.setCanGoLeft(cgl);
+	player.setCanGoRight(cgr);
 	if (fall)	player.Fall();
 	player.AddCanDash(!fall);
 	if (IsKeyPressed(KEY_LEFT_SHIFT) && !player.getIsDashing() && player.getCanDash())	player.Dash();
-
 	player.UpdateHorisontalV();
 	player.UpdatePos();
 }

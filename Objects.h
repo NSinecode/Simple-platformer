@@ -7,9 +7,10 @@
 #define MINABSV			-5000
 #define GRAVITYFORCE	80
 #define HOLDFORCE		0.5
-#define WALKV			10
+#define BUMPFORCE		0.5
+#define WALKV			1000
 #define RUNFORCE		1.5
-#define DASHV			50
+#define DASHV			7000
 #define DASHYFORCE		0
 #define DASHLENGTH		0.08		//in seconds
 
@@ -31,6 +32,8 @@ public:
 	bool getIsFalling();
 	bool getIsDashing();
 	bool getCanDash();
+	bool getCanGoLeft();
+	bool getCanGoRight();
 	bool getAlive();
 	Rectangle getHitbox();
 	Vector2 getV();
@@ -41,6 +44,8 @@ public:
 	void setIsRunning(bool IsRunning);
 	void setIsFalling(bool IsFalling);
 	void setCanDash(bool CanDash);
+	void setCanGoLeft(bool CanGoLeft);
+	void setCanGoRight(bool CanGoRight);
 	void setHitbox(Rectangle Hitbox);
 	void setV(Vector2 V);
 	void setPos(Vector2 pos);
@@ -51,6 +56,7 @@ public:
 
 	//Updating player's movement
 	void PushUp(float dy);
+	void PushRight(float dx);
 	void Jump();
 	void EndJump();
 	void UpdateJumpV();
@@ -67,7 +73,7 @@ private:
 
 	int HP, maxHP;
 
-	bool IsJumping, IsLeft, IsRunning, IsFalling, Alive, IsDashing, CanDash;
+	bool IsJumping, IsLeft, IsRunning, IsFalling, Alive, IsDashing, CanDash, CanGoLeft, CanGoRight;
 	Rectangle Hitbox;
 	std::vector<Texture2D> animations;
 	Vector2 V;
