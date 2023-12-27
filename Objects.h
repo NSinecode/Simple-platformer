@@ -3,16 +3,22 @@
 #include "raylib.h"
 #include "Enemies.h"
 
+//ph constants
 #define JUMPV			2000
 #define MINABSV			-5000
 #define GRAVITYFORCE	80
 #define HOLDFORCE		0.5
-#define BUMPFORCE		0.5
+#define BUMPFORCE		0.1
 #define WALKV			1000
 #define RUNFORCE		1.5
 #define DASHV			7000
 #define DASHYFORCE		0
 #define DASHLENGTH		0.08		//in seconds
+
+//Sound constants
+#define JUMP			0
+#define COLLISION		1
+#define DASH			2
 
 void DrawRectangleRecOrdinary(Rectangle rec, Color color);
 
@@ -23,6 +29,8 @@ class Player
 public:
 	Player();
 	Player(Vector2 pos);
+
+	~Player();
 	
 	//getters
 	int getHP();
@@ -35,6 +43,7 @@ public:
 	bool getCanGoLeft();
 	bool getCanGoRight();
 	bool getAlive();
+	std::vector<Sound> getSounds();
 	Rectangle getHitbox();
 	Vector2 getV();
 
@@ -68,14 +77,13 @@ public:
 
 private:
 	float GravityForce;
-
 	double DashTimer;
-
 	int HP, maxHP;
-
 	bool IsJumping, IsLeft, IsRunning, IsFalling, Alive, IsDashing, CanDash, CanGoLeft, CanGoRight;
-	Rectangle Hitbox;
+
 	std::vector<Texture2D> animations;
+	std::vector<Sound> sounds;
+	Rectangle Hitbox;
 	Vector2 V;
 };
 void UpdatePlayerMovement(Player &player, Chapter chapter);

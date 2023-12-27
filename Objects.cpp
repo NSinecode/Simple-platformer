@@ -7,6 +7,10 @@ Player::Player()
 	CanDash = CanGoLeft = CanGoRight = true;
 	Hitbox = { 0, 0, 100, 300 };
 	V = { 0, 0 };
+	//Loading sounds
+	sounds.push_back(LoadSound("Sound effects/jump.wav"));
+	sounds.push_back(LoadSound("Sound effects/endjump.wav"));
+	sounds.push_back(LoadSound("Sound effects/dash.wav"));
 }
 
 Player::Player(Vector2 pos)
@@ -16,6 +20,18 @@ Player::Player(Vector2 pos)
 	CanDash = true;
 	Hitbox = { pos.x, pos.y, 100, 300 };
 	V = { 0, 0 };
+	//Loading sounds
+	sounds.push_back(LoadSound("Sound effects/jump.wav"));
+	sounds.push_back(LoadSound("Sound effects/endjump.wav"));
+	sounds.push_back(LoadSound("Sound effects/dash.wav"));
+}
+
+Player::~Player()
+{
+	//Unloading anims
+	for (int i = 0; i < animations.size(); i++)	UnloadTexture(animations[i]);
+	//Unloading sounds
+	for (int i = 0; i < sounds.size(); i++)	UnloadSound(sounds[i]);
 }
 
 int Player::getHP()
@@ -57,6 +73,10 @@ bool Player::getCanGoRight()
 bool Player::getAlive()
 {
 	return Alive;
+}
+std::vector<Sound> Player::getSounds()
+{
+	return sounds;
 }
 Rectangle Player::getHitbox()
 {
@@ -138,12 +158,14 @@ void Player::Jump()
 	V.y = JUMPV;
 	GravityForce = GRAVITYFORCE;
 	Hitbox.y++;
+	PlaySound(sounds[JUMP]);
 }
 
 void Player::EndJump()
 {
 	V.y = 0;
 	IsJumping = 0;
+	StopSound(sounds[JUMP]);
 }
 
 void Player::UpdateJumpV()
@@ -173,6 +195,7 @@ void Player::Dash()
 	else V.x = -DASHV;
 	V.y *= DASHYFORCE;
 	DashTimer = GetTime();
+	PlaySound(sounds[DASH]);
 }
 
 void Player::AddCanDash(bool dc)
@@ -212,7 +235,8 @@ void UpdatePlayerMovement(Player& player, Chapter chapter)
 	if ((IsKeyPressed(KEY_SPACE) or IsKeyDown(KEY_SPACE)) && !player.getIsJumping())	player.Jump();
 	else if (player.getIsJumping() or player.getIsFalling()) player.UpdateJumpV();
 	//cgl - can go left, cgr - can go right
-	bool fall =	1, cgl = 1, cgr = 1;
+	bool fall =	1, cgl = 1, cgr = 1, newcol = 0;
+
 	//Check rectangle collision
 	for (int i = 0; i < chapter.getRecObstacles().size(); i++)
 	{
@@ -221,6 +245,7 @@ void UpdatePlayerMovement(Player& player, Chapter chapter)
 			Rectangle col = GetCollisionRec(player.getHitbox(), chapter.getRecObstacles()[i]);
 			if (col.width > col.height)
 			{
+				if (player.getIsJumping() or player.getIsFalling() && (player.getV().y <= 0))	newcol = 1;
 				if (abs(col.y - player.getHitbox().y) < abs(col.y - player.getHitbox().y - player.getHitbox().height))
 				{
 					fall = 0;
@@ -251,6 +276,8 @@ void UpdatePlayerMovement(Player& player, Chapter chapter)
 			}
 		}
 	}
+
+	if ((player.getIsJumping() or player.getIsFalling()) == fall)	PlaySound(player.getSounds()[COLLISION]);
 	player.setCanGoLeft(cgl);
 	player.setCanGoRight(cgr);
 	if (fall)	player.Fall();

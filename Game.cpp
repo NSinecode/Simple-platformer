@@ -16,6 +16,8 @@ int main()
     InitWindow(screenWidth, screenHeight, "Game");
     SetWindowPosition(0, 30);
 
+    InitAudioDevice();      // Initialize audio device
+
     //Camera settings
     Camera2D camera = { 0 };
     camera.offset = { (float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2 };
@@ -27,9 +29,9 @@ int main()
 
     //Chapter
     Chapter first;
-    first.setRecObstacles({ { -1000, -100, 2000, 100 }, { -2000, -300, 300, 100 }, { -1000, 700, 2000, 100 } , { 1000, -300, 100, 600 } , { -2100, -300, 100, 400 } });
+    first.setRecObstacles({ { -1000, -100, 2000, 100 }, { -2000, -200, 300, 200 }, { -1000, 600, 2000, 100 } , { 1000, -300, 100, 600 } , { -2100, -300, 100, 400 } });
 
-    // Set our game to run at 60 frames-per-second
+    // Set our game to run at some frames-per-second
     SetTargetFPS(144);                  
 
     // Main game loop
@@ -104,8 +106,10 @@ int main()
         EndDrawing();
     }
 
+
     // De-Initialization
     //--------------------------------------------------------------------------------------
+    CloseAudioDevice();     // Close audio device
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
     return 0;
